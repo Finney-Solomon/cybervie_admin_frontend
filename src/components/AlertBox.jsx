@@ -52,7 +52,7 @@ export const AlertBox = () => {
             </DialogContent>
             <DialogActions>
               <Button onClick={onDisagree}>Disagree</Button>
-              <Button onClick={onAgree} autoFocus>
+              <Button onClick={onAgree} autoFocus variant="contained">
                 Agree
               </Button>
             </DialogActions>

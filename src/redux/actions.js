@@ -7,9 +7,13 @@ import {
   OPEN_ALERT_BOX,
   OPEN_SNACKBAR_NOTIFICATION,
   CLOSE_SNACKBAR_NOTIFICATION,
+  PAGE_CHANGE,
+  ROWS_PER_PAGE,
+  UPDATE_USER_LOGIN_DETAILS,
 } from "./type";
-
-
+import { PlaylistAddOutlined } from "@mui/icons-material";
+import useHistory from "use-history";
+const history=useHistory
 export const handleSideBar = (payload) => ({
   type: OPEN_CLOSE_SIDE_BAR,
   payload: payload,
@@ -45,18 +49,40 @@ export const closeSnackBarNotification = () => ({
   payload: false,
 });
 
-export const getUserLeadData = () => async (dispatch) => {
-  try {
-    const response = await axios.get(
-      "http://localhost:5001/usersLeads/getUserLeadList"
-    );
-    const payload = response?.data?.data;
-    
-    dispatch(saveUserLeadList(payload));
-  } catch (error) {
-    console.error("Error fetching user leads:", error);
-  }
-};
+export const handlePageChange = (payload) => ({
+  type: PAGE_CHANGE,
+  payload: payload,
+});
+export const handleRowPerPage = (payload) => ({
+  type: ROWS_PER_PAGE,
+  payload: payload,
+});
+
+export const updateUserLoginDetails = (payload) => ({
+  type: UPDATE_USER_LOGIN_DETAILS,
+  payload: payload,
+});
+
+export const getUserLeadData =
+  (page = 1, rowsPerPage = 10) =>
+  async (dispatch) => {
+    try {
+      const response = await axios.get(
+        "http://localhost:5001/usersLeads/getUserLeadList",
+        {
+          params: {
+            page: page,
+            rowsPerPage: rowsPerPage, // Assuming pageSize is used on the server side
+          },
+        }
+      );
+      const payload = response?.data?.data;
+      console.log(payload, "payload");
+      dispatch(saveUserLeadList(payload));
+    } catch (error) {
+      console.error("Error fetching user leads:", error);
+    }
+  };
 
 export const handleCallStatus = (payload) => async (dispatch) => {
   const data = {
@@ -92,12 +118,11 @@ export const handleCallStatus = (payload) => async (dispatch) => {
 };
 
 export const handleStudentStatus = (payload) => async (dispatch) => {
-  alert("check");
   const data = {
     _id: payload.row._id,
     studentStatus: payload.event.target.value,
   };
-  dispatch(openAlertBox(true));
+ console.log(data,"check")
   try {
     const response = await axios.post(
       "http://localhost:5001/usersLeads/updateStudentStatus",
@@ -121,5 +146,35 @@ export const handleStudentStatus = (payload) => async (dispatch) => {
     }
   } catch (error) {
     console.error("Error Updating User Leads:", error);
+  }
+};
+
+export const getUserDetails = (payload) => async (dispatch) => {
+  // Convert payload to a valid ObjectId
+  const userId = payload;
+
+  try {
+    const response = await axios.get(
+      `http://localhost:5001/userDetails/${userId}`
+    );
+    if (response?.data?.success) {
+      const notification = {
+        isOpen: true,
+        notificationMessage: "Logged in Successful!",
+        notificationType: "success",
+      };
+      dispatch(openSnackBarNotification(notification));
+      dispatch(updateUserLoginDetails(response?.data?.data));
+      history.push('/welcome')
+    } else {
+      const notification = {
+        isOpen: true,
+        notificationMessage: "Unable to Login!",
+        notificationType: "error",
+      };
+      dispatch(openSnackBarNotification(notification));
+    }
+  } catch (error) {
+    console.error("Error fetching user details:", error);
   }
 };
